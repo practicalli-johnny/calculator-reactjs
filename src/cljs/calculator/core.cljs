@@ -3,21 +3,19 @@
             [cljsjs.react.dom]
             [clojure.string :as str]))
 
-(defn element [type props & children]
-  (js/React.createElement type (clj->js props) children))
+;; From the examples in the following tutorial
+;; https://lambdaisland.com/episodes/react-app-clojurescript
 
-(def vdom (element "div" {}
-            (element "p" {} "Hello from React")
-            (element "img" {:src "/parrot.jpg"})))
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Model / State
 (def app-state (atom {:display 0 :history []}))
 
-(defn component [name & {:keys [render]}]
-  (js/React.createClass
-   #js {:displayName name
-        :render (fn []
-                  (this-as t
-                    (render (js->clj (.-props t) :keywordize-keys true))))}))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Application Actions
 
 (defn digit-pressed [digit]
   (swap! app-state update :display #(long (str % digit))))
@@ -43,6 +41,34 @@
                        (-> state
                            (assoc :display result)
                            (assoc :history []))))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Components
+
+
+(defn element
+  "Create react.js elements, converting clojure values into Javascript"
+  [type props & children]
+  (js/React.createElement type (clj->js props) children))
+
+
+;; Simple page using several elements
+;; (def vdom (element "div" {}
+;;             (element "p" {} "Hello from React")
+;;             (element "img" {:src "/parrot.JPEG"})))
+
+
+
+(defn component
+  "Creates react.js components"
+  [name & {:keys [render]}]
+  (js/React.createClass
+   #js {:displayName name
+        :render (fn []
+                  (this-as t
+                    (render (js->clj (.-props t) :keywordize-keys true))))}))
+
 
 
 (def Title
@@ -93,6 +119,8 @@
                   (element Button {:label "=" :onPress equals-pressed})
                   (element Button {:label "+" :onPress operator-pressed}))))))
 
+;; Component: Calculator
+;; A component composed of the components, Title, History, Display, Keypad
 (def Calculator
   (component "Calculator"
     :render (fn [props]
@@ -103,6 +131,8 @@
                 (element Keypad {})))))
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; React functions
 
 (defn render [state]
   (js/ReactDOM.render (element Calculator state)
@@ -111,7 +141,28 @@
 
 (render @app-state)
 
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Testing code
+
+;; use add-watch to call render for every state change, specifically for changes to the atom made in the REPL
+;; add-watch takes three arguments: the atom to be watched, a key to identify the watch, and the callback function.
+;; The callback will receive the identifier key, the atom, the old state, and the new state. We only care about the new state, so you can ignore the rest.
+
 (add-watch app-state :redraw (fn [_ _ _ state] (render state)))
 
-(compute 10 "+" 20 "-" 5
-)
+;; Testing the compute funcition
+;; (compute 10 "+" 20 "-" 5)
+
+
+;; Test updating of the state
+;; (swap! app-state update :display inc)
+
+;; (swap! app-state update :display #(+ 7))
+
+(swap! app-state assoc :history 42)
+
+;; (swap! app-state conj {:foo "bar"})
+
+;; (reset! app-state {:display 0 :history []})

@@ -1,5 +1,7 @@
 # calculator
 
+A simple calculator client-side app created with React.js, included via the cljsjs.github.io website
+
 
 ## Development
 
