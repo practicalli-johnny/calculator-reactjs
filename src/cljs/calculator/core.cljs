@@ -10,9 +10,14 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Model / State
+
+;; Wrap an immutable associative data structure, a Hash Map,
+;; in a mutable container, an atom
+
 (def app-state (atom {:display 0 :history []}))
 
-
+;; When we update the app-state, we replace the immutable data structure,
+;; or update with a function (actually returns a new data structure)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Application Actions
@@ -59,7 +64,9 @@
 ;;             (element "img" {:src "/parrot.JPEG"})))
 
 
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Component generator
+;; - encapsulates some javascript interop
 (defn component
   "Creates react.js components"
   [name & {:keys [render]}]
@@ -70,22 +77,25 @@
                     (render (js->clj (.-props t) :keywordize-keys true))))}))
 
 
-
+;; Simple components
 (def Title
   (component "Title"
-             :render (fn [props]
-                       (element "p" {} "Hello from React"))))
+    :render (fn [props]
+              (element "p" {} "Hello from React"))))
 
 (def History
   (component "History"
     :render (fn [props]
-              (element "div" {:className "history"} (str/join " " (props :history))))))
+              (element "div" {:className "history"}
+                       (str/join " " (props :history))))))
 
 (def Display
   (component "Display"
     :render (fn [props]
-              (element "div" {:className "display"} (props :value)))))
+              (element "div" {:className "display"}
+                       (props :value)))))
 
+;; Component with button
 (def Button
   (component "Button"
     :render (fn [props]
@@ -94,6 +104,7 @@
                 (element "button" {:className "button"
                                    :onClick #(handler label)} label)))))
 
+;; Component with multiple elements
 (def Keypad
   (component "Keypad"
     :render (fn [props]
@@ -138,13 +149,12 @@
   (js/ReactDOM.render (element Calculator state)
                       (js/document.getElementById "app")))
 
-
 (render @app-state)
 
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Testing code
+;; REPL Testing code
 
 ;; use add-watch to call render for every state change, specifically for changes to the atom made in the REPL
 ;; add-watch takes three arguments: the atom to be watched, a key to identify the watch, and the callback function.
@@ -157,12 +167,12 @@
 
 
 ;; Test updating of the state
-;; (swap! app-state update :display inc)
+#_(swap! app-state update :display inc)
 
-;; (swap! app-state update :display #(+ 7))
+#_(swap! app-state update :display #(+ 7))
 
-(swap! app-state assoc :history 42)
+#_(swap! app-state assoc :history 42)
 
-;; (swap! app-state conj {:foo "bar"})
+#_(swap! app-state conj {:foo "bar"})
 
-;; (reset! app-state {:display 0 :history []})
+#_(reset! app-state {:display 0 :history []})
